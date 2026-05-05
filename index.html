@@ -1,61 +1,106 @@
-import { useEffect, useRef, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  import.meta.env.dbsmtzrzpffhvxviogwn.supabase.co,
-  import.meta.env.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRic210enJ6cGZmaHZ4dmlvZ3duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5ODk2OTIsImV4cCI6MjA5MzU2NTY5Mn0.GtmE1v5j6CLaD0MPgAw_FdVkCITaeetWBm2fBSd40Qs
-);
-
-export default function SpotifyLikeApp() {
-  const [songs, setSongs] = useState([]);
-  const [currentSong, setCurrentSong] = useState(null);
-  const audioRef = useRef(null);
-
-  useEffect(() => {
-    async function loadSongs() {
-      const { data, error } = await supabase
-        .from('songs')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (!error) setSongs(data);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supabase Music App</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b0b0f;
+      color: white;
     }
 
-    loadSongs();
-  }, []);
-
-  const playSong = (song) => {
-    setCurrentSong(song);
-
-    if (audioRef.current) {
-      audioRef.current.src = song.file_url;
-      audioRef.current.play();
+    header {
+      padding: 20px;
+      font-size: 24px;
+      font-weight: bold;
     }
-  };
 
-  return (
-    <div className="min-h-screen bg-zinc-950 text-white p-6">
-      <h1 className="text-3xl font-bold mb-6">My Music App</h1>
+    .container {
+      padding: 20px;
+      display: grid;
+      gap: 10px;
+    }
 
-      <div className="grid gap-3">
-        {songs.map((song) => (
-          <button
-            key={song.id}
-            onClick={() => playSong(song)}
-            className="p-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-left"
-          >
-            <div className="font-semibold">{song.title}</div>
-            <div className="text-sm text-zinc-400">{song.artist}</div>
-          </button>
-        ))}
-      </div>
+    .song {
+      background: #1a1a22;
+      padding: 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
 
-      <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 p-4 border-t border-zinc-800">
-        <div className="mb-2">
-          {currentSong ? `Now Playing: ${currentSong.title}` : 'Select a song'}
-        </div>
-        <audio ref={audioRef} controls className="w-full" />
-      </div>
-    </div>
-  );
-}
+    .song:hover {
+      background: #2a2a35;
+    }
+
+    .player {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #111;
+      padding: 15px;
+      border-top: 1px solid #333;
+    }
+
+    audio {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+<header>My Music App</header>
+
+<div class="container" id="songList"></div>
+
+<div class="player">
+  <div id="nowPlaying">Select a song</div>
+  <audio id="audioPlayer" controls></audio>
+</div>
+
+<script>
+  const supabaseUrl = "YOUR_SUPABASE_URL";
+  const supabaseKey = "YOUR_SUPABASE_ANON_KEY";
+
+  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+  const songList = document.getElementById("songList");
+  const audioPlayer = document.getElementById("audioPlayer");
+  const nowPlaying = document.getElementById("nowPlaying");
+
+  async function loadSongs() {
+    const { data, error } = await supabase
+      .from('songs')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    data.forEach(song => {
+      const div = document.createElement('div');
+      div.className = 'song';
+      div.innerHTML = `<strong>${song.title}</strong><br/><small>${song.artist}</small>`;
+
+      div.onclick = () => {
+        audioPlayer.src = song.file_url;
+        audioPlayer.play();
+        nowPlaying.innerText = `Now Playing: ${song.title}`;
+      };
+
+      songList.appendChild(div);
+    });
+  }
+
+  loadSongs();
+</script>
+
+</body>
+</html>
