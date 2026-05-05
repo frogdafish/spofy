@@ -1,1 +1,61 @@
-import { useEffect, useRef, useState } from 'react'; import { createClient } from '@supabase/supabase-js'; const supabase = createClient( import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY ); export default function SpotifyLikeApp() { const [songs, setSongs] = useState([]); const [currentSong, setCurrentSong] = useState(null); const audioRef = useRef(null); useEffect(() => { async function loadSongs() { const { data, error } = await supabase .from('songs') .select('*') .order('created_at', { ascending: false }); if (!error) setSongs(data); } loadSongs(); }, []); const playSong = (song) => { setCurrentSong(song); if (audioRef.current) { audioRef.current.src = song.file_url; audioRef.current.play(); } }; return ( <div className="min-h-screen bg-zinc-950 text-white p-6"> <h1 className="text-3xl font-bold mb-6">My Music App</h1> <div className="grid gap-3"> {songs.map((song) => ( <button key={song.id} onClick={() => playSong(song)} className="p-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-left" > <div className="font-semibold">{song.title}</div> <div className="text-sm text-zinc-400">{song.artist}</div> </button> ))} </div> <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 p-4 border-t border-zinc-800"> <div className="mb-2"> {currentSong ?%20`Now%20Playing:%20${currentSong.title}`%20:%20%27Select%20a%20song%27}%20%3C/div%3E%20%3Caudio%20ref={audioRef}%20controls%20className=%22w-full%22%20/%3E%20%3C/div%3E%20%3C/div%3E%20);%20}
+import { useEffect, useRef, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
+export default function SpotifyLikeApp() {
+  const [songs, setSongs] = useState([]);
+  const [currentSong, setCurrentSong] = useState(null);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    async function loadSongs() {
+      const { data, error } = await supabase
+        .from('songs')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error) setSongs(data);
+    }
+
+    loadSongs();
+  }, []);
+
+  const playSong = (song) => {
+    setCurrentSong(song);
+
+    if (audioRef.current) {
+      audioRef.current.src = song.file_url;
+      audioRef.current.play();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-white p-6">
+      <h1 className="text-3xl font-bold mb-6">My Music App</h1>
+
+      <div className="grid gap-3">
+        {songs.map((song) => (
+          <button
+            key={song.id}
+            onClick={() => playSong(song)}
+            className="p-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-left"
+          >
+            <div className="font-semibold">{song.title}</div>
+            <div className="text-sm text-zinc-400">{song.artist}</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 p-4 border-t border-zinc-800">
+        <div className="mb-2">
+          {currentSong ? `Now Playing: ${currentSong.title}` : 'Select a song'}
+        </div>
+        <audio ref={audioRef} controls className="w-full" />
+      </div>
+    </div>
+  );
+}
