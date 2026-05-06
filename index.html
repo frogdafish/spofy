@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Supabase Music App</title>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     body {
       margin: 0;
@@ -15,14 +17,14 @@
 
     header {
       padding: 20px;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
     }
 
     .container {
       padding: 20px;
       display: grid;
-      gap: 10px;
+      gap: 12px;
     }
 
     .song {
@@ -31,10 +33,12 @@
       border-radius: 12px;
       cursor: pointer;
       transition: 0.2s;
+      border: 1px solid transparent;
     }
 
     .song:hover {
       background: #2a2a35;
+      border-color: #444;
     }
 
     .player {
@@ -50,12 +54,20 @@
     audio {
       width: 100%;
     }
+
+    .status {
+      opacity: 0.7;
+      font-size: 14px;
+      padding: 10px 20px;
+    }
   </style>
 </head>
+
 <body>
 
 <header>My Music App</header>
 
+<div class="status" id="status">Loading songs...</div>
 <div class="container" id="songList"></div>
 
 <div class="player">
@@ -64,35 +76,51 @@
 </div>
 
 <script>
-  const supabaseUrl = "dbsmtzrzpffhvxviogwn.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRic210enJ6cGZmaHZ4dmlvZ3duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5ODk2OTIsImV4cCI6MjA5MzU2NTY5Mn0.GtmE1v5j6CLaD0MPgAw_FdVkCITaeetWBm2fBSd40Qs";
+  const SUPABASE_URL = "https://dbsmtzrzpffhvxviogwn.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRic210enJ6cGZmaHZ4dmlvZ3duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5ODk2OTIsImV4cCI6MjA5MzU2NTY5Mn0.GtmE1v5j6CLaD0MPgAw_FdVkCITaeetWBm2fBSd40Qs";
 
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
 
   const songList = document.getElementById("songList");
   const audioPlayer = document.getElementById("audioPlayer");
   const nowPlaying = document.getElementById("nowPlaying");
+  const status = document.getElementById("status");
 
   async function loadSongs() {
-    const { data, error } = await supabase
-      .from('songs')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data, error } = await supabaseClient
+      .from("songs")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error(error);
+      status.innerText = "Error loading songs.";
       return;
     }
 
-    data.forEach(song => {
-      const div = document.createElement('div');
-      div.className = 'song';
-      div.innerHTML = `<strong>${song.title}</strong><br/><small>${song.artist}</small>`;
+    if (!data || data.length === 0) {
+      status.innerText = "No songs found in database.";
+      return;
+    }
+
+    status.innerText = "";
+
+    data.forEach((song) => {
+      const div = document.createElement("div");
+      div.className = "song";
+
+      div.innerHTML = `
+        <strong>${song.title}</strong><br/>
+        <small>${song.artist}</small>
+      `;
 
       div.onclick = () => {
         audioPlayer.src = song.file_url;
         audioPlayer.play();
-        nowPlaying.innerText = `Now Playing: ${song.title}`;
+        nowPlaying.innerText = "Now Playing: " + song.title;
       };
 
       songList.appendChild(div);
